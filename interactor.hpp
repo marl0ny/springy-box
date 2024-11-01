@@ -28,6 +28,7 @@ class Interactor {
     bool left_pressed();
     bool middle_pressed();
     bool right_pressed();
+    void release_left();
     bool left_released();
     bool middle_released();
     bool right_released();

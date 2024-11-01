@@ -18,9 +18,9 @@ endif
 WEB_TARGET = main.js
 
 TARGET = ${PWD}/program
-CPP_SOURCES = main.cpp gl_wrappers.cpp glfw_window.cpp interactor.cpp
+CPP_SOURCES = main.cpp box_2d.cpp gl_wrappers.cpp glfw_window.cpp interactor.cpp
 SOURCES = ${C_SOURCES} ${CPP_SOURCES}
-OBJECTS = main.o gl_wrappers.o glfw_window.o interactor.o
+OBJECTS = main.o box_2d.o gl_wrappers.o glfw_window.o interactor.o
 # SHADERS = ./shaders/*
 
 
@@ -30,7 +30,7 @@ ${TARGET}: ${OBJECTS}
 	${CPP_COMPILE} ${FLAGS} -o $@ ${OBJECTS} ${LIBS}
 
 ${WEB_TARGET}: ${SOURCES}
-	emcc -o $@ ${SOURCES} ${INCLUDE} -O3 -v -s WASM=1 -s USE_GLFW=3 -s FULL_ES3=1 \
+	emcc -lembind -o $@ ${SOURCES} ${INCLUDE} -O3 -v -s WASM=1 -s USE_GLFW=3 -s FULL_ES3=1 \
 	-s TOTAL_MEMORY=100MB -s LLD_REPORT_UNDEFINED --embed-file shaders
 
 ${OBJECTS}: ${CPP_SOURCES}

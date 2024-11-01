@@ -1,28 +1,71 @@
 <!DOCTYPE html>
 <meta charset="utf-8"/>
 <html>
-    <center>
-        <h3 style="color:white;">Box of springs</h3>>
+    <head>
+        <style>
+            h3 {font-family:Arial, Helvetica, sans-serif; }
+            label {font-family:Arial, Helvetica, sans-serif; color: white; }
+			text {font-family:Arial, Helvetica, sans-serif; }
+        </style>
+    </head>
     <body style="font-family: Arial; background-color: rgb(0, 0, 0);">
-        <canvas id="canvas", oncontextmenu="event.preventDefault()",
-         style = "width: 1024px; height: 256px;"> </canvas>
-         <br/> <!--<br/> !-->
-         <p style="color:white; font-size:12px;">
-            Use the mouse to grab and move the box of springs around.</br>
-            To reset the simulation, hit the space bar.
-         </p>
+        <h3 style="color:white; text-align: center;">Box of springs</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr;">
+            <div style="grid-column: 1;">
+                <label for="stepsPerFrame" id="stepsPerFrameLabel">Steps/Frame
+                </label>
+                <input type="range" id="stepsPerFrame"
+							name="stepsPerFrame"
+							min="0" max="300" value="15"
+							style="width: 95%;"/>
+            </div>
+            <div style="grid-column: 2;">
+                <canvas id="canvas" oncontextmenu="event.preventDefault()"
+                    style="touch-action: none; 
+                        border: solid white 1px; top: 0px; bottom: 0px;
+                        text-align: center;">
+                </canvas>
+                <p style="color:white; font-size:12px; text-align: center;">
+                    Use the mouse to grab and move the box of springs around.
+                    To reset the simulation, hit the space bar.
+                </p>
+            </div>
+        </div>
     </body>
-    </center>
     <script type='text/javascript'>
         var canvas = document.getElementById('canvas');
+        let clientW = document.documentElement.clientWidth;
+        let clientH = document.documentElement.clientHeight;
+        let sideLength = Number.parseInt(
+            0.85*((clientW < clientH)? clientW: clientH));
         var Module = {
-          canvas: canvas
+          canvas: canvas,
+          arguments: [`${sideLength}`, `${sideLength}`]
         };
+        function getNormalizedCanvasCoordinates(e) {
+            let x = (e.clientX - canvas.offsetLeft)/canvas.offsetWidth;
+            let y = ((canvas.offsetTop + canvas.offsetHeight) 
+                        - e.clientY)/canvas.offsetHeight;
+            return [x, y];
+        }
+        document.addEventListener('mousemove', e => {
+            let [x, y] = getNormalizedCanvasCoordinates(e);
+            Module.set_left_xy(x, y);
+        });
+        document.addEventListener('mouseup', e => {
+            let [x, y] = getNormalizedCanvasCoordinates(e);
+            let type = 0;
+            Module.set_left_xy_type(x, y, 0);
+        });
+        document.addEventListener('mousedown', e => {
+            let [x, y] = getNormalizedCanvasCoordinates(e);
+            let type = 1;
+            Module.set_left_xy_type(x, y, 1);
+        });
+        document.getElementById('stepsPerFrame').addEventListener(
+            "input", e => Module.set_steps_frame(
+                Number.parseInt(e.target.value))
+        )
     </script>
-    <!--<script type='text/javascript'>
-        var canvas = document.getElementById('canvas');
-        canvas.style.width = `${parseInt(0.95*window.innerHeight)}px`;
-        canvas.style.height = `${parseInt(0.95*window.innerHeight)}px`;
-    </script>!-->
     <script src="main.js"></script>
 </html>
