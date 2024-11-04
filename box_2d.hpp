@@ -1,35 +1,10 @@
 #include "gl_wrappers.hpp"
 #include "glfw_window.hpp"
+#include "uniform_parameters.hpp"
 
 namespace sim_2d {
 
-struct SimParams {
-    int steps_frame = 15;
-    float dt = 0.0005;
-    float x_min = 0.0;
-    float x_max = 20.0; // 10.0 originally
-    float y_min = 0.0;
-    float y_max = 20.0; // 10.0 originally
-    float spring_const1 = 6e2; // 3e2 - 6e2
-    float spring_const2 = spring_const1/1.0;
-    // float drag_const = 7e-5;
-    float drag_const = 2e-4;
-    float rest_width = 12.0; // 6.0 originally
-    float rest_height = 6.0; // 3.0 originally
-    float wall_force_const = 1e4;
-    float wall_friction = 1.0;
-    float g = 9.81;
-    int w_count = 128; // 64 originally
-    int h_count = 64; // 32 originally
-    float m =1.0/2048.0; // 1.0/(w_count*h_count) originally
-    Vec2 initial_position = Vec2{
-        .ind={x_min + (x_max - x_min)*0.5F,
-              y_min + (y_max - y_min)*0.5F}};
-    Vec2 initial_velocity = Vec2{.x=10.0, .y=10.0};
-    float initial_angle = 3.14159F/2.0F;
-    float initial_angular_velocity = -10.0F;
-    
-};
+typedef UniformParams SimParams;
 
 struct MainRenderFrames {
     TextureParams main_view_tex_params;

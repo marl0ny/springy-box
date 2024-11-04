@@ -11,13 +11,7 @@
     <body style="font-family: Arial; background-color: rgb(0, 0, 0);">
         <h3 style="color:white; text-align: center;">Box of springs</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr;">
-            <div style="grid-column: 1;">
-                <label for="stepsPerFrame" id="stepsPerFrameLabel">Steps/Frame
-                </label>
-                <input type="range" id="stepsPerFrame"
-							name="stepsPerFrame"
-							min="0" max="300" value="15"
-							style="width: 95%;"/>
+            <div style="grid-column: 1;" id="controls">
             </div>
             <div style="grid-column: 2;">
                 <canvas id="canvas" oncontextmenu="event.preventDefault()"
@@ -62,10 +56,39 @@
             let type = 1;
             Module.set_left_xy_type(x, y, 1);
         });
-        document.getElementById('stepsPerFrame').addEventListener(
-            "input", e => Module.set_steps_frame(
-                Number.parseInt(e.target.value))
-        )
+
+        function createSlider(
+            controls, enumCode, sliderLabelName, type, spec) {
+            let label = document.createElement("label");
+            label.for = spec['id']
+            label.style = "color:white; font-family:Arial, Helvetica, sans-serif";
+            label.textContent = sliderLabelName;
+            controls.appendChild(label);
+            let slider = document.createElement("input");
+            slider.type = "range";
+            slider.style ="width: 95%;"
+            for (let k of Object.keys(spec))
+                slider[k] = spec[k];
+            controls.appendChild(slider);
+            slider.addEventListener("input", e => {
+                if (type === "float") {
+                    let value = Number.parseFloat(e.target.value);
+                    label.textContent = `${sliderLabelName} = ${value}`
+                    Module.set_float_param(enumCode, value);
+                }
+            });
+        };
+
+        // let enumCode = 1;
+        // let sliderLabelName = 'dt';
+        // let type = "float";
+        // let spec = {'id': 'sliderId',
+        //     'min': 0.0, 'max': 0.0005, 'value': 0.0005, 'step': 1e-5};
+        // let controls = document.getElementById('controls');
+        // createSlider(
+        //     controls, enumCode, sliderLabelName, type, spec);
+
     </script>
+    <script src="sliders.js"></script>
     <script src="main.js"></script>
 </html>

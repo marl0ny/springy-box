@@ -18,6 +18,8 @@ endif
 WEB_TARGET = main.js
 
 TARGET = ${PWD}/program
+GENERATION_SCRIPTS = make_sim_params.py
+GENERATED_DEPENDENCIES = uniform_parameters.hpp sliders.js
 CPP_SOURCES = main.cpp box_2d.cpp gl_wrappers.cpp glfw_window.cpp interactor.cpp
 SOURCES = ${C_SOURCES} ${CPP_SOURCES}
 OBJECTS = main.o box_2d.o gl_wrappers.o glfw_window.o interactor.o
@@ -29,12 +31,15 @@ all: ${TARGET}
 ${TARGET}: ${OBJECTS}
 	${CPP_COMPILE} ${FLAGS} -o $@ ${OBJECTS} ${LIBS}
 
-${WEB_TARGET}: ${SOURCES}
+${WEB_TARGET}: ${SOURCES} ${GENERATED_DEPENDENCIES}
 	emcc -lembind -o $@ ${SOURCES} ${INCLUDE} -O3 -v -s WASM=1 -s USE_GLFW=3 -s FULL_ES3=1 \
 	-s TOTAL_MEMORY=100MB -s LLD_REPORT_UNDEFINED --embed-file shaders
 
-${OBJECTS}: ${CPP_SOURCES}
+${OBJECTS}: ${CPP_SOURCES} ${GENERATED_DEPENDENCIES}
 	${CPP_COMPILE} ${FLAGS} -c ${CPP_SOURCES} ${INCLUDE}
+
+${GENERATED_DEPENDENCIES}: parameters.json ${GENERATION_SCRIPTS}
+	python3 make_sim_params.py
 
 clean:
 	rm -f *.o ${TARGET} *.wasm *.js

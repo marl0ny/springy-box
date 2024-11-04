@@ -26,16 +26,6 @@ using namespace::sim_2d;
 
 SimParams s_sim_params {};
 
-void set_steps_frame(int val) {
-    s_sim_params.steps_frame = val;
-}
-
-#ifdef __EMSCRIPTEN__
-EMSCRIPTEN_BINDINGS(my_module) {
-    function("set_steps_frame", set_steps_frame);
-}
-#endif
-
 int main(int argc, char *argv[]) {
     int window_width = 1500, window_height = 1500;
     if (argc >= 2) {
@@ -45,15 +35,17 @@ int main(int argc, char *argv[]) {
     GLFWwindow *window = init_window(window_width, window_height);
     auto simulation = Simulation(
         window_width, window_height, s_sim_params);
-
     Interactor interactor(window);
+    float x_min = s_sim_params.xMin.f32;
+    float y_min = s_sim_params.yMin.f32;
     Vec2 mouse_pos = Vec2{
-        .ind={-10.0F + s_sim_params.x_min,
-              -10.0F + s_sim_params.y_min}};
+        .ind={-10.0F + x_min,
+              -10.0F + y_min}};
     int n_clicks = 0;
     
     loop = [&] {
-        for (int i = 0; i < s_sim_params.steps_frame; i++)
+        int steps_frame = s_sim_params.stepsPerFrame.i32;
+        for (int i = 0; i < steps_frame; i++)
             simulation.time_step(s_sim_params);
         simulation.render_view(s_sim_params);
         glfwPollEvents();
@@ -63,17 +55,21 @@ int main(int argc, char *argv[]) {
                 std::cout << "x: " << interactor.get_mouse_position().x << std::endl;
                 std::cout << "y: " << interactor.get_mouse_position().y << std::endl;
                 mouse_pos = interactor.get_mouse_position();
+                float x_min = s_sim_params.xMin.f32;
+                float x_max = s_sim_params.xMax.f32;
+                float y_min = s_sim_params.xMin.f32;
+                float y_max = s_sim_params.xMax.f32;
                 Vec2 interact_pos = {
                     .ind={
-                        s_sim_params.x_min
+                        x_min
                         + mouse_pos[0]
-                            *(s_sim_params.x_max - s_sim_params.x_min),
-                        s_sim_params.y_min
+                            *(x_max - x_min),
+                        y_min
                         + mouse_pos[1]
-                            *(s_sim_params.y_max - s_sim_params.y_min)
+                            *(y_max - y_min)
                     }
                 };
-                float sigma = 0.05*(s_sim_params.x_max - s_sim_params.x_min);
+                float sigma = 0.05*(x_max - x_min);
                 if (n_clicks++ == 0) {
                     simulation.set_hold_position(interact_pos);
                 }
@@ -101,3 +97,45 @@ int main(int argc, char *argv[]) {
     glfwDestroyWindow(window);
     return 1;
 }
+
+#ifdef __EMSCRIPTEN__
+
+void set_int_param(int param_code, int i) {
+    s_sim_params.set(param_code, Uniform((int)i));
+}
+
+void set_float_param(int param_code, float f) {
+    s_sim_params.set(param_code, Uniform((float)f));
+}
+
+void set_bool_param(int param_code, bool b) {
+    s_sim_params.set(param_code, Uniform((bool)b));
+}
+
+void set_vec2_param(int param_code, float x, float y) {
+    s_sim_params.set(
+        param_code, 
+        Uniform(Vec2 {.x=x, .y=y}));
+}
+
+void set_vec3_param(int param_code, float x, float y, float z) {
+    s_sim_params.set(
+        param_code, 
+        Uniform(Vec3 {.x=x, .y=y, .z=z}));
+}
+
+void set_vec4_param(int param_code, float x, float y, float z, float w) {
+    s_sim_params.set(
+        param_code, 
+        Uniform(Vec4 {.x=x, .y=y, .z=z, .w=w}));
+}
+
+EMSCRIPTEN_BINDINGS(my_module) {
+    function("set_float_param", set_float_param);
+    function("set_int_param", set_int_param);
+    function("set_bool_param", set_bool_param);
+    function("set_vec2_param", set_vec2_param);
+    function("set_vec3_param", set_vec3_param);
+    function("set_vec4_param", set_vec4_param);
+}
+#endif

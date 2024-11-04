@@ -1,0 +1,23 @@
+{
+    "stepsPerFrame": {"type": "int", "value": 15, "min": 0, "max": 100},
+    "dt": {"type": "float", "value": 0.0005, "min": 0.0, "max": 0.0006, "step": 0.0001},
+    "xMin": {"type": "float", "value": 0.0},
+    "xMax": {"type": "float", "value": 20.0},
+    "yMin": {"type": "float", "value": 0.0}, 
+    "yMax": {"type": "float", "value": 20.0},
+    "springConst1": {"type": "float", "value": 6e2, "min": 3e2, "max": 1000, "step": 10},
+    "springConst2": {"type": "float", "value": 6e2, "min": 3e2, "max": 1000, "step": 10},
+    "dragConst": {"type": "float", "value": 2e-4, "min": 0.0, "max": 1e-3, "step": 1e-5},
+    "restWidth": {"type": "float", "value": 12.0, "min": 3.0, "max": 15.0, "step": 0.1},
+    "restHeight": {"type": "float", "value": 6.0, "min": 3.0, "max": 15.0, "step": 0.1},
+    "wallForceConst": {"type": "float", "value": 1e4},
+    "wallFriction": {"type": "float", "value": 1.0, "min": 0.0, "max": 2.0, "step": 0.1},
+    "g": {"type": "float", "value": 9.81, "min": 0.0, "max": 20.0, "step": 0.01},
+    "wCount": {"type": "int", "value": 64},
+    "hCount": {"type": "int", "value": 32},
+    "m": {"type": "float",  "value": 0.00048828125, "comment": "value is 1.0/2048.0"},
+    "initialPosition": {"type": "Vec2", "value": [10.0, 10.0], "min": [5.0, 5.0], "max": [15.0, 15.0], "step": [0.1, 0.1]},
+    "initialVelocity": {"type": "Vec2", "value": [10.0, 10.0], "min": [-15.0, -15.0], "max": [15.0, 15.0], "step": [0.1, 0.1]},
+    "initialAngle": {"type": "float", "value": 1.5707963267948966, "min": 0.0, "max": 6.283185307179586, "step": 0.006283185307179587},
+    "initialAngularVelocity": {"type": "float", "value": -10.0, "min": -15.0, "max": 15.0, "step": -1.0}
+}

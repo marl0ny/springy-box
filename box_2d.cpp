@@ -53,8 +53,8 @@ MainRenderFrames::MainRenderFrames(
     sim_tex_params(
         {
             .format=GL_RGBA32F, 
-            .width=(uint32_t)sim_params.w_count,
-            .height=(uint32_t)sim_params.h_count,
+            .width=(uint32_t)sim_params.wCount.i32,
+            .height=(uint32_t)sim_params.hCount.i32,
             .mag_filter=GL_NEAREST, .min_filter=GL_NEAREST,
             .wrap_s=GL_CLAMP_TO_EDGE,
             .wrap_t=GL_CLAMP_TO_EDGE,
@@ -99,7 +99,7 @@ Simulation::Simulation(
     int window_width, int window_height, SimParams sim_params
 ): m_programs(), m_frames(sim_params, window_width, window_height),
     m_wire_frame(get_springs_wire_frame(
-        sim_params.w_count, sim_params.h_count)) {
+        sim_params.wCount.i32, sim_params.hCount.i32)) {
     this->init_config(sim_params);
 }
 
@@ -109,21 +109,21 @@ void Simulation::compute_velocity_acceleration(
     dst.draw(
         m_programs.vel_acc,
         {
-            {"springConst1", {sim_params.spring_const1}},
-            {"springConst2", {sim_params.spring_const2}},
-            {"dragConst", {sim_params.drag_const}},
-            {"restWidth", {sim_params.rest_width}},
-            {"restHeight", {sim_params.rest_height}},
-            {"xMin", {sim_params.x_min}},
-            {"xMax", {sim_params.x_max}},
-            {"yMin", {sim_params.y_min}},
-            {"yMax", {sim_params.y_max}},
-            {"wallForceConst", {sim_params.wall_force_const}},
-            {"wallFriction", {sim_params.wall_friction}},
-            {"wCount", {sim_params.w_count}},
-            {"hCount", {sim_params.h_count}},
-            {"m", {sim_params.m}},
-            {"g", {sim_params.g}},
+            {"springConst1", sim_params.springConst1},
+            {"springConst2", sim_params.springConst2},
+            {"dragConst", sim_params.dragConst},
+            {"restWidth", sim_params.restWidth},
+            {"restHeight", sim_params.restHeight},
+            {"xMin", sim_params.xMin},
+            {"xMax", sim_params.xMax},
+            {"yMin", sim_params.yMin},
+            {"yMax", sim_params.yMax},
+            {"wallForceConst", sim_params.wallForceConst},
+            {"wallFriction", sim_params.wallFriction},
+            {"wCount", sim_params.wCount},
+            {"hCount", sim_params.hCount},
+            {"m", sim_params.m},
+            {"g", sim_params.g},
             {"coordTex", {&src}},
             {"extForcesTex", {&m_frames.ext_force}},
         }
@@ -152,23 +152,23 @@ void Simulation::forward_euler(
 }
 
 void Simulation::init_config(SimParams sim_params) {
-    float domain_width = sim_params.x_max - sim_params.x_min;
-    float domain_height = sim_params.y_max - sim_params.y_min;
+    // float domain_width = sim_params.x_max - sim_params.x_min;
+    // float domain_height = sim_params.y_max - sim_params.y_min;
     m_frames.coords.draw(
         m_programs.init,
         {
-            {"width", {sim_params.rest_width}},
-            {"height", {sim_params.rest_height}}, 
-            {"position", {sim_params.initial_position}},
-            {"velocity", {sim_params.initial_velocity}},
-            {"angle", {sim_params.initial_angle}},
-            {"omega", {sim_params.initial_angular_velocity}}
+            {"width", sim_params.restWidth},
+            {"height", sim_params.restHeight}, 
+            {"position", sim_params.initialPosition},
+            {"velocity", sim_params.initialVelocity},
+            {"angle", sim_params.initialAngle},
+            {"omega", sim_params.initialAngularVelocity}
         }
     );
 }
 
 void Simulation::time_step(SimParams sim_params) {
-    float dt = sim_params.dt;
+    float dt = sim_params.dt.f32;
     // q1
     compute_velocity_acceleration(
         m_frames.vel_acc1, m_frames.coords, m_frames.ext_force, sim_params
@@ -199,7 +199,7 @@ void Simulation::time_step(SimParams sim_params) {
             {"velAccTex2", {&m_frames.vel_acc2}},
             {"velAccTex3", {&m_frames.vel_acc3}},
             {"velAccTex4", {&m_frames.vel_acc4}},
-            {"dt", {sim_params.dt}}
+            {"dt", sim_params.dt}
         }
     );
     m_frames.coords.draw(
@@ -214,10 +214,10 @@ void Simulation::render_view(SimParams sim_params) {
         m_programs.view, 
         {
             {"coordTex", {&m_frames.coords}},
-            {"xMin", {sim_params.x_min}},
-            {"xMax", {sim_params.x_max}},
-            {"yMin", {sim_params.y_min}},
-            {"yMax", {sim_params.y_max}},
+            {"xMin", sim_params.xMin},
+            {"xMax", sim_params.xMax},
+            {"yMin", sim_params.yMin},
+            {"yMax", sim_params.yMax},
             {"coordTexF", {&m_frames.coords}},
             {"extForcesTex", {&m_frames.ext_force}},
             // {"color", {Vec4 {.ind={1.0, 1.0, 1.0, 1.0}}}}

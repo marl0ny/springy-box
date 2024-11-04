@@ -1,10 +1,10 @@
-/* This header file and its corresponding source contains 
+/* This header file and its corresponding source contain 
 custom wrapper functions and classes around the OpenGL API to hide 
 the tedious boilerplate, for the purpose of simplifying 
 the structure and layout of simulation code that utilize GLSL shaders
 for numerical computations and visualizations.
 
-A helpful resource for writing this source file is Learn OpenGL
+A useful resource for writing this source file is Learn OpenGL
 (https://learnopengl.com), which is especially helpful for learning
 OpenGL for the first time.
 */
@@ -330,6 +330,18 @@ struct Uniform {
         type=Uniform::MULTIDIMENSIONAL_DATA_QUAD;
     }
 };
+
+struct UniformSlider {
+    Uniform val;
+    Uniform min;
+    Uniform max;
+    Uniform step;
+    std::string name;
+    Uniform operator()() {
+        return val;
+    }
+};
+
 
 uint32_t shader_from_source(
     std::string shader_source, uint32_t shader_type);

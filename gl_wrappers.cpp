@@ -1,10 +1,10 @@
-/* This source file and its corresponding header contains 
+/* This source file and its corresponding header contain
 custom wrapper functions and classes around the OpenGL API to hide 
 the tedious boilerplate, for the purpose of simplifying 
 the structure and layout of simulation code that utilize GLSL shaders
 for numerical computations and visualization.
 
-A helpful resource for writing this source file is Learn OpenGL
+A useful resource for writing this source file is Learn OpenGL
 (https://learnopengl.com), which is especially helpful for learning
 OpenGL for the first time.
 */
