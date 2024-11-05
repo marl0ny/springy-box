@@ -1,9 +1,9 @@
 #include "gl_wrappers.hpp"
 
-    namespace sim_2d {
+namespace sim_2d {
 
-    struct UniformParams {
-    Uniform stepsPerFrame = Uniform((int)(15));
+struct UniformParams {
+    Uniform stepsPerFrame = Uniform((int)(30));
     Uniform dt = Uniform((float)(0.0005F));
     Uniform xMin = Uniform((float)(0.0F));
     Uniform xMax = Uniform((float)(20.0F));
@@ -113,6 +113,53 @@
             initialAngularVelocity = val;
             break;
         }
+    }
+    Uniform get(int enum_val) const {
+        switch(enum_val) {
+            case STEPS_PER_FRAME:
+            return stepsPerFrame;
+            case DT:
+            return dt;
+            case X_MIN:
+            return xMin;
+            case X_MAX:
+            return xMax;
+            case Y_MIN:
+            return yMin;
+            case Y_MAX:
+            return yMax;
+            case SPRING_CONST1:
+            return springConst1;
+            case SPRING_CONST2:
+            return springConst2;
+            case DRAG_CONST:
+            return dragConst;
+            case REST_WIDTH:
+            return restWidth;
+            case REST_HEIGHT:
+            return restHeight;
+            case WALL_FORCE_CONST:
+            return wallForceConst;
+            case WALL_FRICTION:
+            return wallFriction;
+            case G:
+            return g;
+            case W_COUNT:
+            return wCount;
+            case H_COUNT:
+            return hCount;
+            case M:
+            return m;
+            case INITIAL_POSITION:
+            return initialPosition;
+            case INITIAL_VELOCITY:
+            return initialVelocity;
+            case INITIAL_ANGLE:
+            return initialAngle;
+            case INITIAL_ANGULAR_VELOCITY:
+            return initialAngularVelocity;
+        }
+    return Uniform(0);
     }
 };
 

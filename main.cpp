@@ -26,6 +26,13 @@ using namespace::sim_2d;
 
 SimParams s_sim_params {};
 
+/*
+ Can pass command line arguments to main. This is primarily
+ introduced so that the dimensions of the window can be
+ chosen before launch, which is particularly useful for 
+ the WASM build where the html file page can vary in size.
+
+*/
 int main(int argc, char *argv[]) {
     int window_width = 1500, window_height = 1500;
     if (argc >= 2) {
@@ -100,6 +107,19 @@ int main(int argc, char *argv[]) {
 
 #ifdef __EMSCRIPTEN__
 
+/* Setters for the global static simulation parameters
+struct, where they are the exposed entry point for
+JavaScript code in the WASM build.
+There are multiple functions, one for each type.
+They take as argument a param_code, where these codes
+must be written separately in JavaScript, followed by a number
+of float or int arguments. For Vector arguments, multiple floats
+and ints must be passed, instead of passing the Vector structs
+themselves. This is done so that I won't
+have to deal with the complexity of getting non-primitive objects
+to be passed between JS/C++.
+*/
+
 void set_int_param(int param_code, int i) {
     s_sim_params.set(param_code, Uniform((int)i));
 }
@@ -130,6 +150,30 @@ void set_vec4_param(int param_code, float x, float y, float z, float w) {
         Uniform(Vec4 {.x=x, .y=y, .z=z, .w=w}));
 }
 
+void set_vec_param(int param_code, int elemCount, int index, float val) {
+    auto u = s_sim_params.get(param_code);
+    if (elemCount == 2) {
+        u.vec2[index] = val;
+    } else if (elemCount == 3) {
+        u.vec3[index] = val;
+    } else {
+        u.vec4[index] = val;
+    }
+    s_sim_params.set(param_code, u);
+}
+
+void set_ivec_param(int param_code, int elemCount, int index, float val) {
+    auto u = s_sim_params.get(param_code);
+    if (elemCount == 2) {
+        u.ivec2[index] = val;
+    } else if (elemCount == 3) {
+        u.ivec3[index] = val;
+    } else {
+        u.ivec4[index] = val;
+    }
+    s_sim_params.set(param_code, u);
+}
+
 EMSCRIPTEN_BINDINGS(my_module) {
     function("set_float_param", set_float_param);
     function("set_int_param", set_int_param);
@@ -137,5 +181,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
     function("set_vec2_param", set_vec2_param);
     function("set_vec3_param", set_vec3_param);
     function("set_vec4_param", set_vec4_param);
+    function("set_vec_param", set_vec_param);
+    function("set_ivec_param", set_ivec_param);
 }
 #endif
