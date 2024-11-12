@@ -70,6 +70,47 @@ static GLuint to_type(int sized) {
     return -1;
 }
 
+Quaternion Quaternion::conj() const {
+    return {.i=-this->i, .j=-this->j, .k=-this->k, .real=this->real};
+}
+
+float Quaternion::length() const {
+    return sqrt(this->i*this->i + this->j*this->j 
+        + this->k*this->k + this->real*this->real);
+}
+
+float Quaternion::length_squared() const {
+    return this->i*this->i + this->j*this->j 
+        + this->k*this->k + this->real*this->real;
+}
+
+Quaternion Quaternion::inverse() const {
+    float length2 = this->length_squared();
+    return {
+        .i=-this->i/length2, .j=-this->j/length2, .k=-this->k/length2,
+        .real=this->real/length2
+    };
+}
+
+Quaternion Quaternion::rotator(float angle, const Vec3 &axis) {
+    float norm = axis.length();
+    if (norm == 0.0)
+        return {.i=0.0, .j=0.0, .k=0.0, .real=1.0};
+    float c = cos(angle/2.0);
+    float s = sin(angle/2.0);
+    return {.real=c, 
+        .i=s*axis.x/norm, .j=s*axis.y/norm, .k=s*axis.z/norm};
+}
+
+Quaternion Quaternion::operator*(const Quaternion &q) const {
+    return {
+        .real= this->real*q.real - this->i*q.i - this->j*q.j - this->k*q.k,
+        .i = this->real*q.i + this->i*q.real + this->j*q.k - this->k*q.j,
+        .j = this->real*q.j + this->j*q.real + this->k*q.i - this->i*q.k, 
+        .k = this->real*q.k + this->k*q.real + this->i*q.j - this->j*q.i,
+    };
+}
+
 float &Vec2::operator[](size_t index) {
     return this->ind[index];
 }
@@ -274,6 +315,14 @@ Vec3 operator/(float r, const Vec3 &v) {
     for (int i = 0; i < 3; i++)
         res[i] = r / v[i];
     return res;
+}
+
+Vec3 cross_product(const Vec3 & a, const Vec3 & b) {
+    return {.ind={
+        a.y*b.z - a.z*b.y,
+        -a.x*b.z + a.z*b.x,
+        a.x*b.y - a.y*b.x,
+    }};
 }
 
 float &Vec4::operator[](size_t index) {
@@ -736,6 +785,8 @@ uint32_t make_program_from_sources(
 
 uint32_t make_program_from_paths(
     std::string vertex_path, std::string fragment_path) {
+    fprintf(stdout, "Creating program from vertex and fragment shaders \"%s\" and \"%s\".\n",
+        vertex_path.c_str(), fragment_path.c_str());
     std::string vertex_src = get_file_contents(vertex_path);
     std::string fragment_src = get_file_contents(fragment_path);
     return make_program_from_sources(vertex_src, fragment_src);
@@ -1135,6 +1186,7 @@ void main() {
 )";
 
 uint32_t Quad::make_program_from_path(std::string fragment_path) {
+    fprintf(stdout, "Creating Quad program from \"%s\".\n", fragment_path.c_str());
     std::string fragment_source = get_file_contents(fragment_path);
     return make_program_from_source(fragment_source);
 }

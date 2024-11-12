@@ -81,10 +81,10 @@ GLSLPrograms::GLSLPrograms() {
         "./shaders/2d/vel-acc.frag"
     );
     this->rk4 = Quad::make_program_from_path(
-        "./shaders/2d/integration/rk4.frag");
+        "./shaders/integration/rk4.frag");
     this->euler 
         = Quad::make_program_from_path(
-            "./shaders/2d/integration/forward-euler.frag");
+            "./shaders/integration/forward-euler.frag");
     this->view = make_program_from_paths(
         "./shaders/2d/view-springs.vert", "./shaders/2d/view-springs.frag");
     this->point_to_coord = Quad::make_program_from_path(
@@ -145,8 +145,8 @@ void Simulation::forward_euler(
     m_programs.euler,
     {
         {"dt", {dt}},
-        {"coordTex", {&q0}}, 
-        {"velAccTex", {&q0_dot}}
+        {"qTex", {&q0}}, 
+        {"qDotTex", {&q0_dot}}
     }
     );
 }
@@ -194,11 +194,11 @@ void Simulation::time_step(SimParams sim_params) {
     m_frames.tmp.draw(
         m_programs.rk4,
         {
-            {"coordTex", {&m_frames.coords}},
-            {"velAccTex1", {&m_frames.vel_acc1}},
-            {"velAccTex2", {&m_frames.vel_acc2}},
-            {"velAccTex3", {&m_frames.vel_acc3}},
-            {"velAccTex4", {&m_frames.vel_acc4}},
+            {"qTex", {&m_frames.coords}},
+            {"qDotTex1", {&m_frames.vel_acc1}},
+            {"qDotTex2", {&m_frames.vel_acc2}},
+            {"qDotTex3", {&m_frames.vel_acc3}},
+            {"qDotTex4", {&m_frames.vel_acc4}},
             {"dt", sim_params.dt}
         }
     );

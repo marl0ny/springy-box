@@ -51,11 +51,9 @@ let gVecParams = {};
 function createVectorParameterSliders(
     controls, enumCode, sliderLabelName, type, spec) {
     let label = document.createElement("label");
-    let idName = spec.id;
-    label.for = idName;
     label.style = "color:white; font-family:Arial, Helvetica, sans-serif";
     label.textContent = `${sliderLabelName} = (${spec.value})`
-    gVecParams[spec['id']] = spec.value;
+    gVecParams[sliderLabelName] = spec.value;
     controls.appendChild(label);
     controls.appendChild(document.createElement("br"));
     for (let i = 0; i < spec.value.length; i++) {
@@ -71,16 +69,16 @@ function createVectorParameterSliders(
             let valueI = Number.parseInt(e.target.value);
             if (type === "Vec2" || 
                 type === "Vec3" || type === "Vec4") {
-                gVecParams[idName][i] = valueF;
+                gVecParams[sliderLabelName][i] = valueF;
                 label.textContent 
-                    = `${sliderLabelName} = ${gVecParams[idName]}`
+                    = `${sliderLabelName} = (${gVecParams[sliderLabelName]})`
                 Module.set_vec_param(
                     enumCode, spec.value.length, i, valueF);
             } else if (type === "IVec2" || 
                         type === "IVec3" || type === "IVec4") {
-                gVecParams[idName][i] = valueI;
+                gVecParams[sliderLabelName][i] = valueI;
                 label.textContent 
-                    = `${sliderLabelName} = ${gVecParams[idName]}`
+                    = `${sliderLabelName} = (${gVecParams[sliderLabelName]})`
                 Module.set_ivec_param(
                     enumCode, spec.value.length, i, valueI);
             }
@@ -89,7 +87,7 @@ function createVectorParameterSliders(
 };
 """
 
-def write_sliders_js(parameters):
+def write_sliders_js(parameters, dst_file_name):
     file_contents = ""
     file_contents += SLIDER_JS_START
     file_contents += "let controls = document.getElementById('controls');\n"
@@ -104,7 +102,8 @@ def write_sliders_js(parameters):
         if 'min' in parameter and 'max' in parameter:
             p = {k: parameter[k] for k in parameter.keys() 
                      if k in {'min', 'max', 'value', 'step'}}
-            if 'Vec2' in parameter["type"]:
+            if parameter['type'] in ['Vec2', 'Vec3', 'Vec4', 
+                                     'IVec2', 'IVec3', 'IVec4']:
                 file_contents += \
                     'createVectorParameterSliders(controls, '\
                         f'{i}, "{name}", "{type_}", '\
@@ -115,16 +114,16 @@ def write_sliders_js(parameters):
                         f'{i}, "{name}", "{type_}", '\
                             + f'{str(p)});\n'
     file_contents += '\n'
-    with open("sliders.js", "w") as f:
+    with open(dst_file_name, "w") as f:
         f.write(file_contents)
 
 HEADER_START = """#include "gl_wrappers.hpp"
 
-namespace sim_2d {
+namespace {} {}
 """
 
-def write_uniform_parameters_hpp(parameters):
-    file_contents = HEADER_START
+def write_uniform_parameters_hpp(parameters, name_space, dst_file_name):
+    file_contents = HEADER_START.format(name_space, '{')
     file_contents += "\nstruct UniformParams {\n"
     for k in parameters.keys():
         parameter = parameters[k]
@@ -170,12 +169,91 @@ def write_uniform_parameters_hpp(parameters):
     file_contents += '    }\n'   
     file_contents += "};\n\n}\n"
 
-    with open("uniform_parameters.hpp", "w") as f:
+    with open(dst_file_name, "w") as f:
+        f.write(file_contents)
+
+def uniform_member_type(type_: str) -> str:
+    if type_ == 'float':
+        return 'f32'
+    if type_ == 'int':
+        return 'i32'
+    if type_ == 'bool':
+        return 'b32'
+    if type_ == 'Vec2':
+        return 'vec2'
+    if type_ == 'Vec3':
+        return 'vec3'
+    if type_ == 'Vec4':
+        return 'vec4'
+    if type_ == 'IVec2':
+        return 'ivec2'
+    if type_ == 'IVec3':
+        return 'ivec3'
+    if type_ == 'IVec4':
+        return 'ivec4'
+
+def write_typed_sim_parameters_hpp(parameters, name_space, dst_file_name):
+    file_contents = HEADER_START.format(name_space, '{')
+    file_contents += "\nstruct SimParams {\n"
+    for k in parameters.keys():
+        parameter = parameters[k]
+        type_ = parameter["type"]
+        value = parameter["value"]
+        value_str = f'{value}'
+        if 'Vec' in type_:
+            value_str = \
+                f'{type_}' + \
+                    ' {.ind={' + ', '.join([f'{e}' for e in value])\
+                    + '}}'
+        if 'float' in type_:
+            value_str += 'F'
+        file_contents += f"    {type_} {k} = "\
+            + f"({type_})({value_str});\n"
+    file_contents += '    enum {\n'
+    for i, k in enumerate(parameters.keys()):
+        file_contents += \
+            f'        {camel_to_snake(k, scream=True)}={i},\n'
+    file_contents += '    };\n'
+    file_contents += '    void set(int enum_val, Uniform val) {\n'
+    file_contents += '        switch(enum_val) {\n'
+    for i, k in enumerate(parameters.keys()):
+        type_ = parameters[k]['type']
+        file_contents += \
+            f'            case {camel_to_snake(k, scream=True)}:\n'
+        file_contents += \
+            f'            {k} = val.{uniform_member_type(type_)};\n'
+        file_contents += \
+            f'            break;\n'
+    file_contents += '        }\n'
+    file_contents += '    }\n' 
+    file_contents += '    Uniform get(int enum_val) const {\n'
+    file_contents += '        switch(enum_val) {\n'
+    for i, k in enumerate(parameters.keys()):
+        type_ = parameters[k]['type']
+        file_contents += \
+            f'            case {camel_to_snake(k, scream=True)}:\n'
+        file_contents += \
+            '            return {' + f'({type_}){k}' + '};\n'
+        # file_contents += \
+        #    f'            break;\n'
+    file_contents += '        }\n'
+    file_contents += '    return Uniform(0);\n'
+    file_contents += '    }\n'   
+    file_contents += "};\n\n}\n"
+
+    with open(dst_file_name, "w") as f:
         f.write(file_contents)
 
 
 with open('parameters.json', 'r') as f:
     parameters = json.loads(''.join([line for line in f]))
 
-write_sliders_js(parameters)
-write_uniform_parameters_hpp(parameters)
+write_sliders_js(parameters, "sliders.js")
+write_uniform_parameters_hpp(parameters, "sim_2d", "uniform_parameters.hpp")
+write_typed_sim_parameters_hpp(parameters, "sim_2d", "parameters.hpp")
+
+with open('parameters-3d.json', 'r') as f:
+    parameters = json.loads(''.join([line for line in f]))
+write_sliders_js(parameters, "sliders-3d.js")
+write_uniform_parameters_hpp(parameters, "sim_3d", "uniform_parameters3d.hpp")
+write_typed_sim_parameters_hpp(parameters, "sim_3d", "parameters3d.hpp")

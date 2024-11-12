@@ -66,12 +66,16 @@ struct Attribute {
     size_t offset;
 };
 
+struct Vec3;
 
 struct Quaternion {
     float real, i, j, k;
     Quaternion conj() const;
     float length() const;
+    float length_squared() const;
     Quaternion inverse() const;
+    static Quaternion rotator(float angle, const Vec3 &axis);
+    Quaternion operator*(const Quaternion &) const;
 };
 
 struct Vec2 {
@@ -153,6 +157,8 @@ Vec3 operator+(float, const Vec3 &);
 Vec3 operator*(float, const Vec3 &);
 Vec3 operator-(float, const Vec3 &);
 Vec3 operator/(float, const Vec3 &);
+
+Vec3 cross_product(const Vec3 &, const Vec3 &);
 
 struct IVec3 {
     union {

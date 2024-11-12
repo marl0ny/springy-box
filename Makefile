@@ -18,11 +18,12 @@ endif
 WEB_TARGET = main.js
 
 TARGET = ${PWD}/program
+DATA_DEPENDENCIES = parameters.json parameters-3d.json
 GENERATION_SCRIPTS = make_sim_params.py
-GENERATED_DEPENDENCIES = uniform_parameters.hpp sliders.js
-CPP_SOURCES = main.cpp box_2d.cpp gl_wrappers.cpp glfw_window.cpp interactor.cpp
+GENERATED_DEPENDENCIES = uniform_parameters.hpp sliders.js sliders-3d.js
+CPP_SOURCES = main.cpp box_2d.cpp box_3d.cpp gl_wrappers.cpp glfw_window.cpp interactor.cpp
 SOURCES = ${C_SOURCES} ${CPP_SOURCES}
-OBJECTS = main.o box_2d.o gl_wrappers.o glfw_window.o interactor.o
+OBJECTS = main.o box_2d.o box_3d.o gl_wrappers.o glfw_window.o interactor.o
 # SHADERS = ./shaders/*
 
 
@@ -38,7 +39,7 @@ ${WEB_TARGET}: ${SOURCES} ${GENERATED_DEPENDENCIES}
 ${OBJECTS}: ${CPP_SOURCES} ${GENERATED_DEPENDENCIES}
 	${CPP_COMPILE} ${FLAGS} -c ${CPP_SOURCES} ${INCLUDE}
 
-${GENERATED_DEPENDENCIES}: parameters.json ${GENERATION_SCRIPTS}
+${GENERATED_DEPENDENCIES}: ${DATA_DEPENDENCIES} ${GENERATION_SCRIPTS}
 	python3 make_sim_params.py
 
 clean:

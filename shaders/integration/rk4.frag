@@ -24,18 +24,18 @@ in vec2 UV;
 out vec4 fragColor;
 #endif
 
-uniform sampler2D coordTex;
-uniform sampler2D velAccTex1;
-uniform sampler2D velAccTex2;
-uniform sampler2D velAccTex3;
-uniform sampler2D velAccTex4;
+uniform sampler2D qTex;
+uniform sampler2D qDotTex1;
+uniform sampler2D qDotTex2;
+uniform sampler2D qDotTex3;
+uniform sampler2D qDotTex4;
 uniform float dt;
 
 void main() {
-    vec4 q0 = texture2D(coordTex, UV);
-    vec4 qDot1 = texture2D(velAccTex1, UV); 
-    vec4 qDot2 = texture2D(velAccTex2, UV); 
-    vec4 qDot3 = texture2D(velAccTex3, UV); 
-    vec4 qDot4 = texture2D(velAccTex4, UV); 
+    vec4 q0 = texture2D(qTex, UV);
+    vec4 qDot1 = texture2D(qDotTex1, UV); 
+    vec4 qDot2 = texture2D(qDotTex2, UV); 
+    vec4 qDot3 = texture2D(qDotTex3, UV); 
+    vec4 qDot4 = texture2D(qDotTex4, UV); 
     fragColor = q0 + dt*(qDot1 + 2.0*qDot2 + 2.0*qDot3 + qDot4)/6.0;
 }

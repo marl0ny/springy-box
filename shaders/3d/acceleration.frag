@@ -22,12 +22,8 @@ out vec4 fragColor;
 uniform float springConst1;
 uniform float springConst2;
 uniform float dragConst;
-uniform float xMin;
-uniform float xMax;
-uniform float yMin;
-uniform float yMax;
-uniform float zMin;
-uniform float zMax;
+uniform vec3 xyzMin;
+uniform vec3 xyzMax;
 uniform float wallForceConst;
 uniform float wallFriction;
 uniform vec3 restDimensions;
@@ -99,9 +95,13 @@ vec3 getSpringForce(vec3 r0, ivec3 offset) {
     float dx = restDimensions[0]*du;
     float dy = restDimensions[1]*dv;
     float dz = restDimensions[2]*dw;
-    vec3 r0 = get(positionsTex, uvw);
+    // vec3 r0 = get(positionsTex, uvw);
     vec3 r1 = get(positionsTex, uvw + vec3(du, dv, dw));
     float k = springConst1;
+    if ((offset[0] + offset[1] + offset[2]) >= 2)
+        k = springConst2;
+    // if ((offset[0] + offset[1] + offset[2]) > 2)
+    //     k = 0.0;
     float d = sqrt(dx*dx + dy*dy + dz*dz);
     return (inDomain(uvw + vec3(du, dv, dw)))?
         k*norm(r1 - r0)*(distance(r1, r0) - d): vec3(0.0);
@@ -115,6 +115,8 @@ vec3 getForce(vec3 rC, vec3 vC) {
     // float y0 = restDimensions[1]/float(springCountDimensions[1]);
     // float z0 = restDimensions[2]/float(springCountDimensions[2]);
     // float d0 = sqrt(x0*x0 + y0*y0 + z0*z0);
+    float xMin = xyzMin[0], yMin = xyzMin[1], zMin = xyzMin[2];
+    float xMax = xyzMax[0], yMax = xyzMax[1], zMax = xyzMax[2];
     vec3 extForces = texture2D(extForcesTex, UV).xyz;
     vec3 springForces = vec3(0.0);
     for (int i = -1; i <= 1; i++) {
@@ -125,25 +127,27 @@ vec3 getForce(vec3 rC, vec3 vC) {
         }
     }
     float wk = wallForceConst;
+    float wf = wallFriction;
     return (
         springForces
-        - m*g*vec3(0.0, 0.0, 1.0)
+        - m*g*vec3(0.0, 1.0, 0.0)
         + wk*((rC.x < xMin)? 
             vec3(-pow(rC.x - xMin, 1.0), 0.0, 0.0): vec3(0.0))
         + wk*((rC.x > xMax)?
             vec3(-pow(rC.x - xMax, 1.0), 0.0, 0.0): vec3(0.0))
         + wk*((rC.y < yMin)?
             vec3(0.0, -pow(rC.y - yMin, 1.0), 0.0): vec3(0.0))
-        + wk*((rC.y > yMax)?
-            vec3(0.0, -pow(rC.y - yMax, 1.0), 0.0): vec3(0.0))
+        // + wk*((rC.y > yMax)?
+        //     vec3(0.0, -pow(rC.y - yMax, 1.0), 0.0): vec3(0.0))
         + wk*((rC.z < zMin)?
             vec3(0.0, 0.0, -pow(rC.z - zMin, 1.0)): vec3(0.0))
+        + wk*((rC.z > zMax)?
+            vec3(0.0, 0.0, -pow(rC.z - zMax, 1.0)): vec3(0.0))
         - vC*dragConst
-        - wallFriction*vec3(0.0, vC.yz)*((rC.x < xMin)? 1.0: 0.0)
-        - wallFriction*vec3(0.0, vC.yz)*((rC.x > xMax)? 1.0: 0.0)
-        - wallFriction*vec3(vC.x, 0.0, vC.z)*((rC.y < yMin)? 1.0: 0.0)
-        - wallFriction*vec3(vC.x, 0.0, vC.z)*((rC.y > yMax)? 1.0: 0.0)
-        - wallFriction*vec3(vC.xy, 0.0)*((rC.z < zMin)? 1.0: 0.0)
+        - wf*vec3(0.0, vC.yz)*((rC.x < xMin || rC.x > xMax)? 1.0: 0.0)
+        - wf*vec3(vC.x, 0.0, vC.z)*((rC.y < yMin)? 1.0: 0.0)
+        // - wf*vec3(vC.x, 0.0, vC.z)*((rC.y > yMax)? 1.0: 0.0)
+        - wf*vec3(vC.xy, 0.0)*((rC.z < zMin || rC.z > zMax)? 1.0: 0.0)
         + extForces
     );
 }
@@ -153,5 +157,5 @@ void main() {
     vec3 vC = get(velocitiesTex, UV).xyz;
     vec3 force = getForce(rC, vC);
     vec3 acceleration = force/m;
-    fragColor = vec4(vC, acceleration);
+    fragColor = vec4(acceleration, 1.0);
 }

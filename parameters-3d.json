@@ -1,0 +1,19 @@
+{
+    "stepsPerFrame": {"name": "Steps/Frame", "type": "int", "value": 30, "min": 0, "max": 100},
+    "dt": {"name": "Time Step (s)", "type": "float", "value": 0.00050, "min": 0.0, "max": 0.00055, "step": 0.00001},
+    "xyzMin": {"type": "Vec3", "value": [0.0, 0.0, 0.0]},
+    "xyzMax": {"type": "Vec3", "value": [20.0, 20.0, 20.0]},
+    "springConst1": {"name": "Spring Strength (N/m)", "type": "float", "value": 100.0, "min": 10.0, "max": 100.0, "step": 1.0},
+    "springConst2": {"name": "Spring Strength 2 (N/m)", "type": "float", "value": 25.0},
+    "dragConst": {"name": "Drag Force-Velocity Relation (N s/m)", "type": "float", "value": 2e-4, "min": 0.0, "max": 1e-3, "step": 1e-5},
+    "springCountDimensions": {"type": "IVec3", "value": [16, 8, 16]},
+    "restDimensions": {"name": "Rest Dimensions (m)", "type": "Vec3", "value": [12.0, 6.0, 12.0], "min": [3.0, 3.0, 3.0], "max": [15.0, 15.0, 15.0], "step": [0.1, 0.1, 0.1]},
+    "wallForceConst": {"type": "float", "value": 10000.0},
+    "wallFriction": {"name": "Friction Force-Velocity Relation (N s/m)", "type": "float", "value": 1.0, "min": 0.0, "max": 2.0, "step": 0.1},
+    "g": {"name": "Gravity (N)", "type": "float", "value": 9.81, "min": 0.0, "max": 20.0, "step": 0.01},
+    "m": {"type": "float",  "value": 0.00048828125, "comment": "value is 1.0/2048.0"},
+    "initialPosition": {"name": "Initial Position (m)", "type": "Vec3", "value": [10.0, 12.0, 10.0], "min": [5.0, 5.0, 5.0], "max": [15.0, 30.0, 15.0], "step": [0.1, 0.1, 0.1]},
+    "initialVelocity": {"name": "Initial Velocity (m/s)", "type": "Vec3", "value": [0.0, 0.0, 0.0], "min": [-15.0, -15.0, -15.0], "max": [15.0, 15.0, 15.0], "step": [0.1, 0.1, 0.1]},
+    "initialAxis": {"name": "Initial Axis of Orientation", "type": "Vec3", "value": [1.0, 2.0, -1.0], "min": [-1.0, -1.0, -1.0], "max": [1.0, 1.0, 1.0], "step": [0.01, 0.01, 0.01]},
+    "initialAngularVelocity": {"name": "Initial Angular Speed (rad/s)", "type": "float", "value": 0.0, "min": -15.0, "max": 15.0, "step": 0.1}
+}
