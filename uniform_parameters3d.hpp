@@ -10,7 +10,7 @@ struct UniformParams {
     Uniform springConst1 = Uniform((float)(100.0F));
     Uniform springConst2 = Uniform((float)(25.0F));
     Uniform dragConst = Uniform((float)(0.0002F));
-    Uniform springCountDimensions = Uniform((IVec3)(IVec3 {.ind={16, 8, 16}}));
+    Uniform springCountDimensions = Uniform((IVec3)(IVec3 {.ind={32, 15, 32}}));
     Uniform restDimensions = Uniform((Vec3)(Vec3 {.ind={12.0, 6.0, 12.0}}));
     Uniform wallForceConst = Uniform((float)(10000.0F));
     Uniform wallFriction = Uniform((float)(1.0F));
@@ -18,7 +18,7 @@ struct UniformParams {
     Uniform m = Uniform((float)(0.00048828125F));
     Uniform initialPosition = Uniform((Vec3)(Vec3 {.ind={10.0, 12.0, 10.0}}));
     Uniform initialVelocity = Uniform((Vec3)(Vec3 {.ind={0.0, 0.0, 0.0}}));
-    Uniform initialAxis = Uniform((Vec3)(Vec3 {.ind={1.0, 2.0, -1.0}}));
+    Uniform initialAxis = Uniform((Vec3)(Vec3 {.ind={1.0, -1.0, 0.0}}));
     Uniform initialAngularVelocity = Uniform((float)(0.0F));
     enum {
         STEPS_PER_FRAME=0,

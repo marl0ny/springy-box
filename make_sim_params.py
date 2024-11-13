@@ -62,6 +62,7 @@ function createVectorParameterSliders(
         slider.style ="width: 95%;"
         for (let k of Object.keys(spec))
             slider[k] = spec[k][i];
+        slider.value = spec.value[i];
         controls.appendChild(slider);
         controls.appendChild(document.createElement("br"));
         slider.addEventListener("input", e => {

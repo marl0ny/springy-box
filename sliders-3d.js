@@ -44,6 +44,7 @@ function createVectorParameterSliders(
         slider.style ="width: 95%;"
         for (let k of Object.keys(spec))
             slider[k] = spec[k][i];
+        slider.value = spec.value[i];
         controls.appendChild(slider);
         controls.appendChild(document.createElement("br"));
         slider.addEventListener("input", e => {
@@ -77,6 +78,6 @@ createScalarParameterSlider(controls, 10, "Friction Force-Velocity Relation (N s
 createScalarParameterSlider(controls, 11, "Gravity (N)", "float", {'value': 9.81, 'min': 0.0, 'max': 20.0, 'step': 0.01});
 createVectorParameterSliders(controls, 13, "Initial Position (m)", "Vec3", {'value': [10.0, 12.0, 10.0], 'min': [5.0, 5.0, 5.0], 'max': [15.0, 30.0, 15.0], 'step': [0.1, 0.1, 0.1]});
 createVectorParameterSliders(controls, 14, "Initial Velocity (m/s)", "Vec3", {'value': [0.0, 0.0, 0.0], 'min': [-15.0, -15.0, -15.0], 'max': [15.0, 15.0, 15.0], 'step': [0.1, 0.1, 0.1]});
-createVectorParameterSliders(controls, 15, "Initial Axis of Orientation", "Vec3", {'value': [1.0, 2.0, -1.0], 'min': [-1.0, -1.0, -1.0], 'max': [1.0, 1.0, 1.0], 'step': [0.01, 0.01, 0.01]});
+createVectorParameterSliders(controls, 15, "Initial Axis of Orientation", "Vec3", {'value': [1.0, -1.0, 0.0], 'min': [-1.0, -1.0, -1.0], 'max': [1.0, 1.0, 1.0], 'step': [0.01, 0.01, 0.01]});
 createScalarParameterSlider(controls, 16, "Initial Angular Speed (rad/s)", "float", {'value': 0.0, 'min': -15.0, 'max': 15.0, 'step': 0.1});
 

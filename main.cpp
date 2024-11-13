@@ -81,6 +81,10 @@ void box_2d(GLFWwindow *window,
     auto simulation = sim_2d::Simulation(
         window_width, window_height, sim_params);
     s_loop = [&] {
+        /* Quad q {TextureParams {
+            .width=100, .height=100, .format=34836,
+            .mag_filter=GL_LINEAR, .min_filter=GL_LINEAR,
+            .wrap_s=GL_CLAMP_TO_EDGE, .wrap_t=GL_CLAMP_TO_EDGE}};*/
         int steps_frame = sim_params.stepsPerFrame.i32;
         for (int i = 0; i < steps_frame; i++)
             simulation.time_step(sim_params);
@@ -189,9 +193,8 @@ just the quantity itself. But for those functions that set a vector quantity,
 these next arguments in order must be passed into the function: 
 the number of elements the vector contains, the index of the vector to change
 the value, and lastly the value itself. Meanwhile, the actual vector structs
-themselves are not passed as argument: this is done so that I won't have to 
-deal with the complexity of getting non-primitive objects to be passed 
-between JS/C++.
+themselves are not passed as argument: this is to avoid the complexity of 
+getting non-primitive objects to be passed between JS/C++.
 */
 
 void set_int_param(int param_code, int i) {

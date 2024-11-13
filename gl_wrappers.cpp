@@ -1,12 +1,12 @@
 /* This source file and its corresponding header contain
 custom wrapper functions and classes around the OpenGL API to hide 
-the tedious boilerplate, for the purpose of simplifying 
-the structure and layout of simulation code that utilize GLSL shaders
+the tedious boilerplate. Its main purpose is to simplify
+the structure and layout of simulation code that call upon GLSL shaders
 for numerical computations and visualization.
 
 A useful resource for writing this source file is Learn OpenGL
-(https://learnopengl.com), which is especially helpful for learning
-OpenGL for the first time.
+(https://learnopengl.com); it is especially helpful as a first-time
+introduction to OpenGL without any prior graphics knowledge.
 */
 #define GL_SILENCE_DEPRECATION
 // #define GLFW_INCLUDE_GLCOREARB
@@ -22,11 +22,56 @@ OpenGL for the first time.
 
 size_t s_frames_count = 0;
 
-
+std::vector<size_t> s_removed_frames(0);
 static size_t acquire_new_frame() {
+    if (!s_removed_frames.empty()) {
+        size_t frame_id = s_removed_frames.back();
+        s_removed_frames.pop_back();
+        return frame_id;
+    }
     size_t frame_id = s_frames_count++;
     return frame_id;
 }
+
+static const char QUAD_VERTEX_SHADER[] = 
+R"(#if __VERSION__ <= 120
+attribute vec3 position;
+varying vec2 UV;
+#else
+in vec3 position;
+out highp vec2 UV;
+#endif
+void main() {
+    gl_Position = vec4(position.xyz, 1.0);
+    UV = position.xy/2.0 + vec2(0.5, 0.5);
+}
+)";
+
+static const char QUAD_COPY_FRAGMENT_SHADER[] = 
+R"(#if (__VERSION__ >= 330) || (defined(GL_ES) && __VERSION__ >= 300)
+#define texture2D texture
+#else
+#define texture texture2D
+#endif
+
+#if (__VERSION__ > 120) || defined(GL_ES)
+precision highp float;
+#endif
+    
+#if __VERSION__ <= 120
+varying vec2 UV;
+#define fragColor gl_FragColor
+#else
+in vec2 UV;
+out vec4 fragColor;
+#endif
+
+uniform sampler2D tex;
+
+void main() {
+    fragColor = texture2D(tex, UV);
+}
+)";
 
 static GLuint to_base(int sized) {
     switch(sized) {
@@ -316,6 +361,16 @@ Vec3 operator/(float r, const Vec3 &v) {
         res[i] = r / v[i];
     return res;
 }
+
+
+float dot(const Vec2 &v, const Vec2 &w) {
+    return v.x*w.x + v.y*w.y;
+}
+
+float dot(const Vec3 &v, const Vec3 &w) {
+    return v.x*w.x + v.y*w.y + v.z*w.z;
+}
+
 
 Vec3 cross_product(const Vec3 & a, const Vec3 & b) {
     return {.ind={
@@ -802,6 +857,21 @@ class RecycledRender {
     TextureParams params;
 };
 
+static bool texture_params_equal(
+    const TextureParams &a,
+    const TextureParams &b) {
+    return (
+        a.format == b.format
+        && a.width == b.width
+        && a.height == b.height
+        && a.generate_mipmap == b.generate_mipmap
+        && a.wrap_s == b.wrap_s
+        && a.wrap_t == b.wrap_t
+        && a.min_filter == b.min_filter
+        && a.mag_filter == b.mag_filter
+    );
+}
+
 static std::vector<RecycledRender> s_recycled_renders 
     = std::vector<RecycledRender>(10);
 
@@ -1140,50 +1210,66 @@ Quad::Quad(Quad &&r_val) {
     this->params = r_val.params;
     this->texture = r_val.texture;
     this->fbo = r_val.fbo;
+    r_val.id = 0;
+}
+
+static uint32_t s_copy_program = 0;
+static uint32_t get_copy_program() {
+    if (!s_copy_program)
+        s_copy_program = Quad::make_program_from_source(
+    QUAD_COPY_FRAGMENT_SHADER);
+    return s_copy_program;
 }
 
 Quad::Quad(const Quad &q) {
     this->init(q.params);
-    // TODO: need to copy texture value...
+    this->draw(
+        get_copy_program(), {{"tex", &q}}
+    );
 }
 
 Quad& Quad::operator=(const Quad &q) {
-    this->init(q.params);
-    // TODO: need to copy texture value...
+    if (!texture_params_equal(this->params, q.params))
+        this->reset(q.params); // Will do nothing if this->id = 0
+    this->draw(
+        get_copy_program(), {{"tex", &q}}
+    );
     return *this;
 }
 
 
-Quad& Quad::operator=(const Quad && r_val) {
-    // TODO: need to copy texture value...
-    this->id = r_val.id;
-    this->params = r_val.params;
-    this->texture = r_val.texture;
-    this->fbo = r_val.fbo;
+Quad& Quad::operator=(Quad && r_val) {
+    if (this->id != 0) {
+        // If Quad does not contain the main window frame buffer,
+        // delete its contents, cache its original id for later use,
+        // and replace everything with the rvalue's. Set the rvalue's id
+        // to 0 to notify the destructor to not delete the moved contents.
+        glDeleteTextures(1, &this->texture);
+        glDeleteFramebuffers(1, &this->fbo);
+        s_removed_frames.push_back(this->get_id());
+        this->id = r_val.id;
+        this->params = r_val.params;
+        this->texture = r_val.texture;
+        this->fbo = r_val.fbo;
+        r_val.id = 0;
+    } else {
+        // If Quad contains main window frame buffer, copy the contents of the
+        // rvalue texture to it, regardless of whether the textures share
+        // compatible formats.
+        this->draw(get_copy_program(), {{"tex", &r_val}});
+    }
     return *this;
 }
 
 Quad::~Quad() {
+    // If the quad contains the main window frame buffer, do not destroy it.
+    if (this->id == 0)
+        return;
+    std::cout << "Destructor called for " << this->id << std::endl;
     glDeleteTextures(1, &this->texture);
     glDeleteFramebuffers(1, &this->fbo);
-    // TODO
+    s_removed_frames.push_back(this->get_id());
 }
-
-
-
-const char QUAD_VERTEX_SHADER[] = 
-R"(#if __VERSION__ <= 120
-attribute vec3 position;
-varying vec2 UV;
-#else
-in vec3 position;
-out highp vec2 UV;
-#endif
-void main() {
-    gl_Position = vec4(position.xyz, 1.0);
-    UV = position.xy/2.0 + vec2(0.5, 0.5);
-}
-)";
 
 uint32_t Quad::make_program_from_path(std::string fragment_path) {
     fprintf(stdout, "Creating Quad program from \"%s\".\n", fragment_path.c_str());

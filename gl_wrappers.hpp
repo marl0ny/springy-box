@@ -158,8 +158,6 @@ Vec3 operator*(float, const Vec3 &);
 Vec3 operator-(float, const Vec3 &);
 Vec3 operator/(float, const Vec3 &);
 
-Vec3 cross_product(const Vec3 &, const Vec3 &);
-
 struct IVec3 {
     union {
         struct { int ind[3]; };
@@ -250,6 +248,7 @@ float dot(const Vec4 &, const Vec4 &);
 
 int dot(const IVec4 &, const IVec4 &);
 
+Vec3 cross_product(const Vec3 &, const Vec3 &);
 
 struct Config {
     enum {EMPTY=0, VIEWPORT};
@@ -429,7 +428,7 @@ class Quad {
     Quad(Quad &&);
     Quad(const Quad &);
     Quad& operator=(const Quad &);
-    Quad& operator=(const Quad &&);
+    Quad& operator=(Quad &&);
     static uint32_t make_program_from_path(std::string);
     static uint32_t make_program_from_source(std::string);
     int get_id() const;
