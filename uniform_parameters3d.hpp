@@ -7,10 +7,10 @@ struct UniformParams {
     Uniform dt = Uniform((float)(0.0005F));
     Uniform xyzMin = Uniform((Vec3)(Vec3 {.ind={0.0, 0.0, 0.0}}));
     Uniform xyzMax = Uniform((Vec3)(Vec3 {.ind={20.0, 20.0, 20.0}}));
-    Uniform springConst1 = Uniform((float)(100.0F));
+    Uniform springConst1 = Uniform((float)(30.0F));
     Uniform springConst2 = Uniform((float)(25.0F));
     Uniform dragConst = Uniform((float)(0.0002F));
-    Uniform springCountDimensions = Uniform((IVec3)(IVec3 {.ind={32, 15, 32}}));
+    Uniform springCountDimensions = Uniform((IVec3)(IVec3 {.ind={32, 16, 32}}));
     Uniform restDimensions = Uniform((Vec3)(Vec3 {.ind={12.0, 6.0, 12.0}}));
     Uniform wallForceConst = Uniform((float)(10000.0F));
     Uniform wallFriction = Uniform((float)(1.0F));
@@ -18,7 +18,8 @@ struct UniformParams {
     Uniform m = Uniform((float)(0.00048828125F));
     Uniform initialPosition = Uniform((Vec3)(Vec3 {.ind={10.0, 12.0, 10.0}}));
     Uniform initialVelocity = Uniform((Vec3)(Vec3 {.ind={0.0, 0.0, 0.0}}));
-    Uniform initialAxis = Uniform((Vec3)(Vec3 {.ind={1.0, -1.0, 0.0}}));
+    Uniform initialAxis = Uniform((Vec3)(Vec3 {.ind={1.0, -0.25, 0.0}}));
+    Uniform initialRotationAxis = Uniform((Vec3)(Vec3 {.ind={1.0, -0.25, 0.0}}));
     Uniform initialAngularVelocity = Uniform((float)(0.0F));
     enum {
         STEPS_PER_FRAME=0,
@@ -37,7 +38,8 @@ struct UniformParams {
         INITIAL_POSITION=13,
         INITIAL_VELOCITY=14,
         INITIAL_AXIS=15,
-        INITIAL_ANGULAR_VELOCITY=16,
+        INITIAL_ROTATION_AXIS=16,
+        INITIAL_ANGULAR_VELOCITY=17,
     };
     void set(int enum_val, Uniform val) {
         switch(enum_val) {
@@ -89,6 +91,9 @@ struct UniformParams {
             case INITIAL_AXIS:
             initialAxis = val;
             break;
+            case INITIAL_ROTATION_AXIS:
+            initialRotationAxis = val;
+            break;
             case INITIAL_ANGULAR_VELOCITY:
             initialAngularVelocity = val;
             break;
@@ -128,6 +133,8 @@ struct UniformParams {
             return initialVelocity;
             case INITIAL_AXIS:
             return initialAxis;
+            case INITIAL_ROTATION_AXIS:
+            return initialRotationAxis;
             case INITIAL_ANGULAR_VELOCITY:
             return initialAngularVelocity;
         }

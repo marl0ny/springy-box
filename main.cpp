@@ -22,52 +22,81 @@ static void s_main_loop() {
 static std::function <void(int, Uniform)> s_sim_params_set;
 static std::function <Uniform(int)> s_sim_params_get;
 
-void box_3d(GLFWwindow *window, 
+enum {
+    MOUSE_MOVE=0, MOUSE_ROTATE,
+};
+static int s_input_type = MOUSE_ROTATE;
+
+void box_3d(MainGLFWQuad main_render,
             int window_width, int window_height,
             Interactor interactor,
             sim_3d::SimParams &sim_params
             ) {
+    int n_clicks = 0;
     auto simulation = sim_3d::Simulation(
         window_width, window_height, sim_params);
     Quaternion rotation = Quaternion{.i=0.0, .j=0.0, .k=0.0, .real=1.0}; 
     s_loop = [&] {
+        IVec2 tex_dimensions_2d 
+            = get_2d_from_3d_dimensions(sim_params.springCountDimensions);
+        if (tex_dimensions_2d.x != simulation.get_dimensions().x
+            || tex_dimensions_2d.y != simulation.get_dimensions().y) {
+            simulation.set_dimensions(sim_params.springCountDimensions);
+            simulation.init_config(sim_params);
+        }
         int steps_frame = sim_params.stepsPerFrame;
         for (int i = 0; i < steps_frame; i++)
             simulation.time_step(sim_params);
-        simulation.render_view(sim_params, rotation, Interactor::get_scroll());
+        main_render.draw(
+            simulation.render_view(sim_params, rotation, 
+            0.5*Interactor::get_scroll()));
         // simulation.render_view(sim_params);
         glfwPollEvents();
         {
-            interactor.click_update(window);
-            if (interactor.left_pressed()) {
-                Vec2 pos = interactor.get_mouse_position();
-                if (pos.x > 0.0 && pos.x < 1.0 && 
-                    pos.y > 0.0 && pos.y < 1.0) {
-                    Vec2 delta_2d = interactor.get_mouse_delta();
-                    Vec3 delta {.ind={delta_2d[0], delta_2d[1], 0.0}};
-                    Vec3 view_vec {.ind={0.0, 0.0, -1.0}};
-                    Vec3 axis = cross_product(delta, view_vec);
-                    Quaternion rot = Quaternion::rotator(
-                        3.0*axis.length(), axis);
-                    rotation = rotation*rot;
+            interactor.click_update(main_render.get_window());
+            Vec2 pos = interactor.get_mouse_position();
+            if (pos.x > 0.0 && pos.x < 1.0 && 
+                pos.y > 0.0 && pos.y < 1.0) {
+                if (interactor.left_pressed()) {
+                    if (s_input_type == MOUSE_ROTATE) {
+                        Vec2 delta_2d = interactor.get_mouse_delta();
+                        Vec3 delta {.ind={delta_2d[0], delta_2d[1], 0.0}};
+                        Vec3 view_vec {.ind={0.0, 0.0, -1.0}};
+                        Vec3 axis = cross_product(delta, view_vec);
+                        Quaternion rot = Quaternion::rotator(
+                            3.0*axis.length(), axis);
+                        rotation = rotation*rot;
+                    } else {
+                        if (n_clicks++ == 0) {
+                            simulation.set_hold_position(
+                                pos, sim_params, rotation, 
+                                0.5*Interactor::get_scroll());
+                        }
+                        simulation.add_ext_force(
+                            pos, 1.0, sim_params, rotation,
+                            0.5*Interactor::get_scroll());
+                    }
+                } else {
+                    n_clicks = 0;
                 }
-            } else {
-
+                if (interactor.left_released()) {
+                    simulation.clear_ext_force();
+                }
             }
-            if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+            if (glfwGetKey(main_render.get_window(), GLFW_KEY_SPACE) == GLFW_PRESS)
                 simulation.init_config(sim_params);
         };
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(main_render.get_window());
     };
     #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(s_main_loop, 0, true);
     #else
-    while (!glfwWindowShouldClose(window))
+    while (!glfwWindowShouldClose(main_render.get_window()))
         s_loop();
     #endif
 }
 
-void box_2d(GLFWwindow *window, 
+void box_2d(MainGLFWQuad main_render,
             int window_width, int window_height,
             Interactor interactor,
             sim_2d::SimParams &sim_params
@@ -88,10 +117,10 @@ void box_2d(GLFWwindow *window,
         int steps_frame = sim_params.stepsPerFrame.i32;
         for (int i = 0; i < steps_frame; i++)
             simulation.time_step(sim_params);
-        simulation.render_view(sim_params);
+        main_render.draw(simulation.render_view(sim_params));
         glfwPollEvents();
         {
-            interactor.click_update(window);
+            interactor.click_update(main_render.get_window());
             if (interactor.left_pressed()) {
                 std::cout << "x: " << 
                     interactor.get_mouse_position().x << std::endl;
@@ -124,16 +153,16 @@ void box_2d(GLFWwindow *window,
             if (interactor.left_released()) {
                 simulation.clear_ext_force();
             }
-            if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+            if (glfwGetKey(main_render.get_window(), GLFW_KEY_SPACE) == GLFW_PRESS)
                 simulation.init_config(sim_params);
         };
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(main_render.get_window());
     };
 
     #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(s_main_loop, 0, true);
     #else
-    while (!glfwWindowShouldClose(window))
+    while (!glfwWindowShouldClose(main_render.get_window()))
         s_loop();
     #endif
 }
@@ -153,8 +182,8 @@ int main(int argc, char *argv[]) {
         window_height = std::atoi(argv[2]);
         if (argc >= 4) which = std::atoi(argv[3]);
     }
-    GLFWwindow *window = init_window(window_width, window_height);
-    Interactor interactor(window);
+    auto main_quad = MainGLFWQuad(window_width, window_height);
+    Interactor interactor(main_quad.get_window());
     if (which % 2 == 0) {
         sim_2d::SimParams sim_params_2d {};
         s_sim_params_set = [&sim_params_2d](int c, Uniform u) {
@@ -163,7 +192,7 @@ int main(int argc, char *argv[]) {
         s_sim_params_get = [&sim_params_2d](int c) -> Uniform {
             return sim_params_2d.get(c);
         };
-        box_2d(window, window_width, window_height, 
+        box_2d(main_quad, window_width, window_height, 
                 interactor, sim_params_2d);
     } else {
         sim_3d::SimParams sim_params_3d {};
@@ -173,11 +202,9 @@ int main(int argc, char *argv[]) {
         s_sim_params_get = [&sim_params_3d](int c) -> Uniform {
             return sim_params_3d.get(c);
         };
-        box_3d(window, window_width, window_height,
+        box_3d(main_quad, window_width, window_height,
                 interactor, sim_params_3d);
     }
-    glfwDestroyWindow(window);
-    glfwTerminate();
     return 1;
 }
 
@@ -233,11 +260,16 @@ void set_ivec_param(int param_code, int elemCount, int index, float val) {
     s_sim_params_set(param_code, u);
 }
 
+void set_mouse_mode(int type) {
+    s_input_type = type;
+}
+
 EMSCRIPTEN_BINDINGS(my_module) {
     function("set_float_param", set_float_param);
     function("set_int_param", set_int_param);
     function("set_bool_param", set_bool_param);
     function("set_vec_param", set_vec_param);
     function("set_ivec_param", set_ivec_param);
+    function("set_mouse_mode", set_mouse_mode);
 }
 #endif

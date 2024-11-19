@@ -94,7 +94,7 @@ WireFrame get_box_bounds_wire_frame(Vec3 xyzMin, Vec3 xyzMax) {
 
 }
 
-MainRenderFrames::MainRenderFrames(
+RenderFrames::RenderFrames(
     SimParams sim_params, int window_width, int window_height):
     main_view_tex_params(
         {
@@ -118,7 +118,6 @@ MainRenderFrames::MainRenderFrames(
             .wrap_t=GL_CLAMP_TO_EDGE,
         }
     ),
-    main_view(Quad(main_view_tex_params)),
     spring_view(RenderTarget(main_view_tex_params)),
     positions(Quad(sim_tex_params)),
     velocities(Quad(sim_tex_params)),
@@ -131,12 +130,15 @@ MainRenderFrames::MainRenderFrames(
         Quad(sim_tex_params), Quad(sim_tex_params),
         Quad(sim_tex_params), Quad(sim_tex_params)
     },
+    line_to_positions(Quad(sim_tex_params)),
     ext_forces(Quad(sim_tex_params))
     {}
 
 GLSLPrograms::GLSLPrograms() {
     this->copy = Quad::make_program_from_path("./shaders/util/copy.frag");
     this->add2 = Quad::make_program_from_path("./shaders/util/add2.frag");
+    this->uniform_color 
+        = Quad::make_program_from_path("./shaders/util/uniform-color.frag");
     this->init
             = Quad::make_program_from_path(
                 "./shaders/3d/init-springs.frag");
@@ -152,6 +154,12 @@ GLSLPrograms::GLSLPrograms() {
         "./shaders/3d/background.vert",
         "./shaders/util/uniform-color.frag"
     );
+    this->line_to_positions = Quad::make_program_from_path(
+        "./shaders/3d/line-to-position.frag"
+    );
+    this->ext_force = Quad::make_program_from_path(
+        "./shaders/3d/ext-force.frag"
+    );
     this->forward_euler = Quad::make_program_from_path(
         "./shaders/integration/forward-euler.frag"
     );
@@ -163,6 +171,9 @@ GLSLPrograms::GLSLPrograms() {
 void Simulation::init_config(SimParams sim_params) {
     int init_positions = 0;
     int init_velocities = 1;
+    // m_frames.line_to_positions.draw(
+    //     m_programs.uniform_color, {{"color", Vec4{.ind={1.0,}}}}
+    // );
     m_frames.positions.draw(
         m_programs.init,
         {
@@ -170,7 +181,7 @@ void Simulation::init_config(SimParams sim_params) {
             {"position", {sim_params.initialPosition}},
             {"velocity", {sim_params.initialVelocity}},
             {"axis", {sim_params.initialAxis}},
-            {"rotationAxis", {sim_params.initialAxis}},
+            {"rotationAxis", {sim_params.initialRotationAxis}},
             {"angularSpeed", {sim_params.initialAngularVelocity}},
             {"mode", init_positions},
             {"texelDimensions3D", {sim_params.springCountDimensions}},
@@ -186,7 +197,7 @@ void Simulation::init_config(SimParams sim_params) {
             {"position", {sim_params.initialPosition}},
             {"velocity", {sim_params.initialVelocity}},
             {"axis", {sim_params.initialAxis}},
-            {"rotationAxis", {sim_params.initialAxis}},
+            {"rotationAxis", {sim_params.initialRotationAxis}},
             {"angularSpeed", {sim_params.initialAngularVelocity}},
             {"mode", init_velocities},
             {"texelDimensions3D", {sim_params.springCountDimensions}},
@@ -224,9 +235,10 @@ void Simulation::forward_euler(
     );
 }
 
-void Simulation::render_view(
+const RenderTarget &Simulation::render_view(
     SimParams sim_params, Quaternion rotation, float scale) {
     glEnable(GL_DEPTH_TEST);
+    m_frames.spring_view.clear();
     m_frames.spring_view.draw(
         m_programs.view_static,
         {
@@ -276,17 +288,14 @@ void Simulation::render_view(
                 IVec2{.ind={
                     (int)m_frames.main_view_tex_params.width,
                     (int)m_frames.main_view_tex_params.height}
-                }
-            }}
+                },}},
+            {"extForcesTex", {&m_frames.ext_forces}},
+            {"lineToPositionsTex", {&m_frames.line_to_positions}}
 
         }, 
         m_wire_frame);
     glDisable(GL_DEPTH_TEST);
-    m_frames.main_view.draw(
-        m_programs.copy,
-        {{"tex", {&m_frames.spring_view}}}
-    );
-    m_frames.spring_view.clear();
+    return m_frames.spring_view;
 }
 
 void Simulation::compute_acceleration(
@@ -399,5 +408,71 @@ void Simulation::time_step(SimParams sim_params) {
         }
     );
 }
+
+void Simulation::set_hold_position(Vec2 interact_pos, 
+    SimParams sim_params, Quaternion rotation, float scale) {
+    m_frames.line_to_positions.draw(
+        m_programs.line_to_positions,
+        {
+            {"screenPosition", {interact_pos}},
+            {"positionsTex", {&m_frames.positions}},
+            {"rMin", {sim_params.xyzMin}},
+            {"rMax", {sim_params.xyzMax}},
+            {"scale", {std::min(std::max(0.1F, scale/12.5F), 2.0F)}},
+            {"rotation", {rotation}},
+            {"screenDimensions", 
+                {m_frames.spring_view.texture_dimensions()}},
+        }
+    );
+}
+
+void Simulation::add_ext_force(Vec2 interact_pos, float size,
+    SimParams sim_params, Quaternion rotation, float scale) {
+    m_frames.ext_forces.draw(
+        m_programs.ext_force,
+        {
+            {"positionsTex", {&m_frames.positions}},
+            {"lineToPositionsTex", {&m_frames.line_to_positions}},
+            {"sigma", {size}},
+            {"screenPosition", {interact_pos}},
+            {"rMin", {sim_params.xyzMin}},
+            {"rMax", {sim_params.xyzMax}},
+            {"scale", {std::min(std::max(0.1F, scale/12.5F), 2.0F)}},
+            {"rotation", {rotation}},
+            {"screenDimensions", {m_frames.spring_view.texture_dimensions()}}
+        }
+    );
+}
+
+void Simulation::clear_ext_force() {
+    m_frames.ext_forces.clear();
+}
+
+IVec2 Simulation::get_dimensions() {
+    return IVec2{.ind={
+        (int)m_frames.sim_tex_params.width, 
+        (int)m_frames.sim_tex_params.height}
+    };
+}
+
+void Simulation::set_dimensions(IVec3 d_3d) {
+    fprintf(stdout, "%d, %d, \n", 
+        m_frames.positions.width(), m_frames.positions.height());
+    IVec2 d = get_2d_from_3d_dimensions(d_3d);
+    m_frames.sim_tex_params.width = d[0];
+    m_frames.sim_tex_params.height = d[1];
+    m_frames.positions.reset(m_frames.sim_tex_params);
+    m_frames.velocities.reset(m_frames.sim_tex_params);
+    for (int i = 0; i < 4; i++) {
+        if (i < 2)
+            m_frames.tmp[i].reset(m_frames.sim_tex_params);
+        m_frames.rk4_velocities[i].reset(m_frames.sim_tex_params);
+        m_frames.rk4_accelerations[i].reset(m_frames.sim_tex_params);
+    }
+    m_frames.line_to_positions.reset(m_frames.sim_tex_params);
+    m_frames.ext_forces.reset(m_frames.sim_tex_params);
+    m_wire_frame = get_springs_wire_frame(d_3d, d);
+}
+
 
 }

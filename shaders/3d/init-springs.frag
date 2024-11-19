@@ -96,7 +96,8 @@ void main() {
     quaternion rotator = getRotator(angle,
         crossProduct(normalize(axis), vec3(0.0, 1.0, 0.0)));
     vec4 r = rotate(quaternion(r0, 1.0), rotator);
-    vec3 s = r.xyz - dot(r.xyz, rotationAxis)/dot(rotationAxis, rotationAxis);
+    vec3 s = r.xyz - rotationAxis*dot(
+        r.xyz, rotationAxis)/dot(rotationAxis, rotationAxis);
     vec3 v = (length(s) == 0.0)?
         vec3(0.0): angularSpeed*crossProduct(normalize(rotationAxis), s);
     if (mode == INIT_POSITIONS)

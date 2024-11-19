@@ -8,6 +8,7 @@ A useful resource for writing this source file is Learn OpenGL
 (https://learnopengl.com); it is especially helpful as a first-time
 introduction to OpenGL without any prior graphics knowledge.
 */
+#include <cstdint>
 #define GL_SILENCE_DEPRECATION
 // #define GLFW_INCLUDE_GLCOREARB
 #define GLFW_INCLUDE_ES3
@@ -847,7 +848,7 @@ uint32_t make_program_from_paths(
     return make_program_from_sources(vertex_src, fragment_src);
 }
 
-class RecycledRender {
+/* class RecycledRender {
     enum { RENDER_TARGET, QUAD };
     int render_type;
     size_t id;
@@ -855,7 +856,7 @@ class RecycledRender {
     uint32_t rbo;
     uint32_t texture;
     TextureParams params;
-};
+};*/
 
 static bool texture_params_equal(
     const TextureParams &a,
@@ -872,8 +873,8 @@ static bool texture_params_equal(
     );
 }
 
-static std::vector<RecycledRender> s_recycled_renders 
-    = std::vector<RecycledRender>(10);
+// static std::vector<RecycledRender> s_recycled_renders 
+//     = std::vector<RecycledRender>(10);
 
 WireFrame::WireFrame(
     const Attributes &attributes,
@@ -1300,10 +1301,6 @@ uint32_t Quad::make_program_from_source(std::string fragment_source) {
     return program;
 }
 
-
-
-
-
 int Quad::get_id() const {
     return this->id;
 }
@@ -1320,21 +1317,27 @@ void Quad::clear() {
 
 void Quad::reset(const TextureParams &new_tex_params) {
     if (this->id != 0) {
-        glDeleteTextures(1, &this->texture);
-        glDeleteFramebuffers(1, &this->fbo);
         this->params = new_tex_params;
         glActiveTexture(GL_TEXTURE0 + this->id);
-        glGenTextures(1, &this->texture);
-        glBindTexture(GL_TEXTURE_2D, this->texture);
+        uint32_t texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
         glTexImage2D(GL_TEXTURE_2D, 0, 
                  params.format, params.width, params.height, 0, 
                  to_base(params.format), to_type(params.format), NULL);
+        glDeleteTextures(1, &this->texture);
+        this->texture = texture;
+        glDeleteFramebuffers(1, &this->fbo);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, params.wrap_s);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, params.wrap_t);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, params.min_filter);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, params.mag_filter);
         if (params.generate_mipmap)
             glGenerateMipmap(GL_TEXTURE_2D);
+        glGenFramebuffers(1, &this->fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, this->fbo);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
+                               GL_TEXTURE_2D, this->texture, 0);
     }
 }
 
@@ -1391,6 +1394,13 @@ void Quad::draw(uint32_t program, const Uniforms &uniforms, const Config config)
             glUniform4i(
                 location, 
                 value.ivec4[0], value.ivec4[1], value.ivec4[2], value.ivec4[3]
+            );
+            break;
+            case Uniform::QUATERNION:
+            glUniform4f(
+                location, 
+                value.quaternion.i, value.quaternion.j, value.quaternion.k,
+                value.quaternion.real
             );
             break;
             case Uniform::QUAD:
@@ -1495,6 +1505,32 @@ uint32_t MultidimensionalDataQuad::make_program_from_source(
     return Quad::make_program_from_path(source);
 }
 
+MainQuad::MainQuad(int width, int height) {
+    this->quad.id = 0;
+    this->quad.params = {
+        .width=(uint32_t)width, .height =(uint32_t)height};
+}
+
+void MainQuad::draw(const Quad &q) {
+    this->quad.draw(
+        get_copy_program(),
+        {{"tex", {&q}}}
+    );
+}
+
+void MainQuad::draw(const MultidimensionalDataQuad &q) {
+    this->quad.draw(
+        get_copy_program(),
+        {{"tex", {&q}}}
+    );
+}
+
+void MainQuad::draw(const RenderTarget &t) {
+    this->quad.draw(
+        get_copy_program(),
+        {{"tex", {&t}}}
+    );
+}
 
 /*
 static double floor(double a) {

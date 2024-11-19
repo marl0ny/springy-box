@@ -27,6 +27,13 @@
                 </br>To reset the simulation, press the space bar.
                 </p>!-->
             </div>
+            <div style="grid-column: 3; padding: 10px;">
+                <label for="setMouseInput">Mouse input<br>
+                <select id="setMouseInput">
+                    <option value=0>Apply forces on box</option>
+                    <option value=1 selected>Rotate view</option>
+                </select><br>
+            </div>
         </div>
     </body>
     <script type='text/javascript'>
@@ -45,20 +52,24 @@
                         - e.clientY)/canvas.offsetHeight;
             return [x, y];
         }
-        document.addEventListener('mousemove', e => {
+        document.getElementById('canvas').addEventListener('mousemove', e => {
             let [x, y] = getNormalizedCanvasCoordinates(e);
             Module.set_left_xy(x, y);
         });
-        document.addEventListener('mouseup', e => {
+        document.getElementById('canvas').addEventListener('mouseup', e => {
             let [x, y] = getNormalizedCanvasCoordinates(e);
             let type = 0;
             Module.set_left_xy_type(x, y, 0);
         });
-        document.addEventListener('mousedown', e => {
+        document.getElementById('canvas').addEventListener('mousedown', e => {
             let [x, y] = getNormalizedCanvasCoordinates(e);
             let type = 1;
             Module.set_left_xy_type(x, y, 1);
         });
+        document.getElementById('setMouseInput').addEventListener(
+            "change", e =>
+                Module.set_mouse_mode(Number.parseInt(e.target.value))
+        );
 
     </script>
     <script src="sliders-3d.js"></script>

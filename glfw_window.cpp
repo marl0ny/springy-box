@@ -2,7 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-GLFWwindow *init_window(int width, int height) {
+static GLFWwindow *init_window(int width, int height) {
     if (glfwInit() != GL_TRUE) {
         #ifndef __EMSCRIPTEN__
 	fprintf(stderr, "%s\n", glfwGetError(NULL));
@@ -45,5 +45,19 @@ GLFWwindow *init_window(int width, int height) {
         #endif
     }
     glfwMakeContextCurrent(window);
+    return window;
+}
+
+GLFWwindow *MainGLFWQuad::window = NULL;
+
+size_t MainGLFWQuad::count = 0;
+
+MainGLFWQuad::MainGLFWQuad(int width, int height): MainQuad(width, height) {
+    count++;
+    if (window == NULL)
+        window = init_window(width, height);
+}
+
+GLFWwindow *MainGLFWQuad::get_window() {
     return window;
 }

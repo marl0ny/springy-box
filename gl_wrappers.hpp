@@ -410,7 +410,6 @@ class RenderTarget {
               const Config config = Config());
 };
 
-
 class Quad {
     size_t id;
     TextureParams params;
@@ -423,6 +422,7 @@ class Quad {
     Quad() {};
     void init(const TextureParams &);
     friend class MultidimensionalDataQuad;
+    friend class MainQuad;
     public:
     Quad(const TextureParams &);
     Quad(Quad &&);
@@ -458,6 +458,16 @@ class MultidimensionalDataQuad {
     void draw(uint32_t program, const Uniforms &uniforms);
     static uint32_t make_program_from_path(std::string);
     static uint32_t make_program_from_source(std::string);
+};
+
+class MainQuad {
+    Quad quad;
+    protected:
+    MainQuad(int width, int height);
+    public:
+    void draw(const Quad &);
+    void draw(const MultidimensionalDataQuad &);
+    void draw(const RenderTarget &);
 };
 
 IVec2 get_2d_from_3d_dimensions(const IVec3 &dimensions_3d);

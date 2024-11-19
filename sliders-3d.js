@@ -71,13 +71,15 @@ function createVectorParameterSliders(
 let controls = document.getElementById('controls');
 createScalarParameterSlider(controls, 0, "Steps/Frame", "int", {'value': 30, 'min': 0, 'max': 100});
 createScalarParameterSlider(controls, 1, "Time Step (s)", "float", {'value': 0.0005, 'min': 0.0, 'max': 0.00055, 'step': 1e-05});
-createScalarParameterSlider(controls, 4, "Spring Strength (N/m)", "float", {'value': 100.0, 'min': 10.0, 'max': 100.0, 'step': 1.0});
+createScalarParameterSlider(controls, 4, "Spring Strength (N/m)", "float", {'value': 30.0, 'min': 10.0, 'max': 100.0, 'step': 1.0});
 createScalarParameterSlider(controls, 6, "Drag Force-Velocity Relation (N s/m)", "float", {'value': 0.0002, 'min': 0.0, 'max': 0.001, 'step': 1e-05});
+createVectorParameterSliders(controls, 7, "Spring count dimensions", "IVec3", {'value': [32, 16, 32], 'min': [8, 8, 8], 'max': [100, 100, 100], 'step': [1, 1, 1]});
 createVectorParameterSliders(controls, 8, "Rest Dimensions (m)", "Vec3", {'value': [12.0, 6.0, 12.0], 'min': [3.0, 3.0, 3.0], 'max': [15.0, 15.0, 15.0], 'step': [0.1, 0.1, 0.1]});
 createScalarParameterSlider(controls, 10, "Friction Force-Velocity Relation (N s/m)", "float", {'value': 1.0, 'min': 0.0, 'max': 2.0, 'step': 0.1});
 createScalarParameterSlider(controls, 11, "Gravity (N)", "float", {'value': 9.81, 'min': 0.0, 'max': 20.0, 'step': 0.01});
 createVectorParameterSliders(controls, 13, "Initial Position (m)", "Vec3", {'value': [10.0, 12.0, 10.0], 'min': [5.0, 5.0, 5.0], 'max': [15.0, 30.0, 15.0], 'step': [0.1, 0.1, 0.1]});
 createVectorParameterSliders(controls, 14, "Initial Velocity (m/s)", "Vec3", {'value': [0.0, 0.0, 0.0], 'min': [-15.0, -15.0, -15.0], 'max': [15.0, 15.0, 15.0], 'step': [0.1, 0.1, 0.1]});
-createVectorParameterSliders(controls, 15, "Initial Axis of Orientation", "Vec3", {'value': [1.0, -1.0, 0.0], 'min': [-1.0, -1.0, -1.0], 'max': [1.0, 1.0, 1.0], 'step': [0.01, 0.01, 0.01]});
-createScalarParameterSlider(controls, 16, "Initial Angular Speed (rad/s)", "float", {'value': 0.0, 'min': -15.0, 'max': 15.0, 'step': 0.1});
+createVectorParameterSliders(controls, 15, "Initial Axis of Orientation", "Vec3", {'value': [1.0, -0.25, 0.0], 'min': [-1.0, -1.0, -1.0], 'max': [1.0, 1.0, 1.0], 'step': [0.01, 0.01, 0.01]});
+createVectorParameterSliders(controls, 16, "Initial Axis of Rotation", "Vec3", {'value': [1.0, -0.25, 0.0], 'min': [-1.0, -1.0, -1.0], 'max': [1.0, 1.0, 1.0], 'step': [0.01, 0.01, 0.01]});
+createScalarParameterSlider(controls, 17, "Initial Angular Speed (rad/s)", "float", {'value': 0.0, 'min': -8.0, 'max': 8.0, 'step': 0.1});
 

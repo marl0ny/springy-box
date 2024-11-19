@@ -7,10 +7,10 @@ struct SimParams {
     float dt = (float)(0.0005F);
     Vec3 xyzMin = (Vec3)(Vec3 {.ind={0.0, 0.0, 0.0}});
     Vec3 xyzMax = (Vec3)(Vec3 {.ind={20.0, 20.0, 20.0}});
-    float springConst1 = (float)(100.0F);
+    float springConst1 = (float)(30.0F);
     float springConst2 = (float)(25.0F);
     float dragConst = (float)(0.0002F);
-    IVec3 springCountDimensions = (IVec3)(IVec3 {.ind={32, 15, 32}});
+    IVec3 springCountDimensions = (IVec3)(IVec3 {.ind={32, 16, 32}});
     Vec3 restDimensions = (Vec3)(Vec3 {.ind={12.0, 6.0, 12.0}});
     float wallForceConst = (float)(10000.0F);
     float wallFriction = (float)(1.0F);
@@ -18,7 +18,8 @@ struct SimParams {
     float m = (float)(0.00048828125F);
     Vec3 initialPosition = (Vec3)(Vec3 {.ind={10.0, 12.0, 10.0}});
     Vec3 initialVelocity = (Vec3)(Vec3 {.ind={0.0, 0.0, 0.0}});
-    Vec3 initialAxis = (Vec3)(Vec3 {.ind={1.0, -1.0, 0.0}});
+    Vec3 initialAxis = (Vec3)(Vec3 {.ind={1.0, -0.25, 0.0}});
+    Vec3 initialRotationAxis = (Vec3)(Vec3 {.ind={1.0, -0.25, 0.0}});
     float initialAngularVelocity = (float)(0.0F);
     enum {
         STEPS_PER_FRAME=0,
@@ -37,7 +38,8 @@ struct SimParams {
         INITIAL_POSITION=13,
         INITIAL_VELOCITY=14,
         INITIAL_AXIS=15,
-        INITIAL_ANGULAR_VELOCITY=16,
+        INITIAL_ROTATION_AXIS=16,
+        INITIAL_ANGULAR_VELOCITY=17,
     };
     void set(int enum_val, Uniform val) {
         switch(enum_val) {
@@ -89,6 +91,9 @@ struct SimParams {
             case INITIAL_AXIS:
             initialAxis = val.vec3;
             break;
+            case INITIAL_ROTATION_AXIS:
+            initialRotationAxis = val.vec3;
+            break;
             case INITIAL_ANGULAR_VELOCITY:
             initialAngularVelocity = val.f32;
             break;
@@ -128,6 +133,8 @@ struct SimParams {
             return {(Vec3)initialVelocity};
             case INITIAL_AXIS:
             return {(Vec3)initialAxis};
+            case INITIAL_ROTATION_AXIS:
+            return {(Vec3)initialRotationAxis};
             case INITIAL_ANGULAR_VELOCITY:
             return {(float)initialAngularVelocity};
         }

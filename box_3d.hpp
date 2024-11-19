@@ -5,34 +5,32 @@
 namespace sim_3d {
 
 
-struct MainRenderFrames {
+struct RenderFrames {
     TextureParams main_view_tex_params;
     TextureParams sim_tex_params;
-    Quad main_view;
     RenderTarget spring_view;
     Quad positions;
     Quad velocities;
     Quad tmp[2];
     Quad rk4_velocities[4];
     Quad rk4_accelerations[4];
+    Quad line_to_positions;
     Quad ext_forces;
-    /* Quad points_to_coord;
-    Quad tmp;
-    Quad ext_force;
-    Quad laplacian;*/
-    MainRenderFrames(
+    RenderFrames(
         SimParams sim_params, int window_width, int window_height);
 };
 
 struct GLSLPrograms {
-    GLuint copy, add2, init, acceleration, view, view_static;
+    GLuint copy, add2, uniform_color;
+    GLuint init, acceleration, view, view_static;
+    GLuint line_to_positions, ext_force;
     GLuint rk4, forward_euler;
     GLSLPrograms();
 };
 
 class Simulation {
     GLSLPrograms m_programs;
-    MainRenderFrames m_frames;
+    RenderFrames m_frames;
     WireFrame m_wire_frame;
     WireFrame m_floor_wire_frame;
     WireFrame m_box_bounds_wire_frame;
@@ -54,10 +52,16 @@ class Simulation {
     Simulation(int window_width, int window_height, SimParams sim_params);
     void init_config(SimParams sim_params);
     void time_step(SimParams sim_params);
-    void render_view(SimParams sim_params, Quaternion rotation, float scale);
-    void set_hold_position(Vec2 interact_pos);
-    void add_ext_force(Vec2 interact_pos, float size);
+    const RenderTarget &render_view(
+        SimParams sim_params, Quaternion rotation, float scale);
+    void set_hold_position(
+        Vec2 interact_pos, 
+        SimParams sim_params, Quaternion rotation, float scale);
+    void add_ext_force(Vec2 interact_pos, float size,
+        SimParams sim_params, Quaternion rotation, float scale);
     void clear_ext_force();
+    IVec2 get_dimensions();
+    void set_dimensions(IVec3 d);
 
 };
 

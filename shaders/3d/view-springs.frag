@@ -16,14 +16,16 @@ in vec2 UV;
 out vec4 fragColor;
 #endif
 
-// uniform sampler2D coordTexF;
-// uniform sampler2D extForcesTex;
+uniform sampler2D extForcesTex;
+uniform sampler2D lineToPositionsTex;
+
 
 void main() {
-    fragColor = vec4(0.75, 0.75, 0.75, 1.0);
-    /* vec4 q = texture2D(coordTexF, UV);
-    vec2 pos = q.xy;
-    vec2 f = texture2D(extForcesTex, UV).xy;
+    // vec3 r = texture2D(lineToPositionsTex, UV).xyz;
+    // vec3 color = vec3(1.0) + vec3(0.0, exp(-0.5*pow(length(r), 2.0)), 0.0);
+    // fragColor = vec4(color/max(color.r, max(color.g, color.b)), 1.0);
+    vec3 f = texture2D(extForcesTex, UV).xyz;
     vec3 color = vec3(1.0) + vec3(0.0, 5.0*length(f), 0.0);
-    fragColor = vec4(color/max(color.r, max(color.g, color.b)), 1.0);*/
+    fragColor = vec4(color/max(color.r, max(color.g, color.b)), 1.0);
+
 }

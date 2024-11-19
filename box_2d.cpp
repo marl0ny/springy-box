@@ -38,7 +38,7 @@ WireFrame get_springs_wire_frame(
     );
 }
 
-MainRenderFrames::MainRenderFrames(
+RenderFrames::RenderFrames(
     SimParams sim_params, int window_width, int window_height) :
     main_view_tex_params(
         {
@@ -209,7 +209,8 @@ void Simulation::time_step(SimParams sim_params) {
     );
 }
 
-void Simulation::render_view(SimParams sim_params) {
+const RenderTarget &Simulation::render_view(SimParams sim_params) {
+    m_frames.spring_view.clear();
     m_frames.spring_view.draw(
         m_programs.view, 
         {
@@ -223,11 +224,7 @@ void Simulation::render_view(SimParams sim_params) {
             // {"color", {Vec4 {.ind={1.0, 1.0, 1.0, 1.0}}}}
         },
         m_wire_frame);
-    m_frames.main_view.draw(
-        m_programs.copy,
-        {{"tex", {&m_frames.spring_view}}}
-    );
-    m_frames.spring_view.clear();
+    return m_frames.spring_view;
 }
 
 void Simulation::set_hold_position(Vec2 interact_pos) {
